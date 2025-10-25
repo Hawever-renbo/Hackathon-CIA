@@ -234,3 +234,21 @@ This is a hackathon project showcasing modern web development and AI integration
 ---
 
 **Smart Schedule Synth** - Making course scheduling intelligent and effortless for NYUAD students! 🎓✨
+
+
+
+
+# Description
+## How We Got Here
+
+*Early alpha:* We could detect time conflicts but didn’t guide users on how to fix them, and course info was too shallow to make informed choices.
+
+*What we changed:*
+•⁠  ⁠*Smart conflict resolution:* Contextual *add/drop suggestions* propose viable swaps and alternative sections the moment a clash appears.
+•⁠  ⁠*Drop courses that don’t fit:* A dedicated *one-click drop* keeps your plan tidy.
+•⁠  ⁠*Requirement-aware planning:* Choose *graduation requirements* (core, major/minor, electives, etc.) and have schedules generated with those constraints in mind.
+•⁠  ⁠*In-depth course descriptions:* Detailed views include *timings, **professors, **course codes, **credits, **sections, and **prerequisites* where available.
+•⁠  ⁠*UX pass:* Clearer labels, tighter layout, improved empty states, and streamlined flows put key actions one click closer.
+•⁠  ⁠*Search that actually helps:* A top-level *search bar* lets you jump straight to the course/section you need—by name or code—and add it instantly.
+
+*Result:* A scheduler that not only flags problems, but also helps you fix them—and ensures the plan you pick actually satisfies your degree requirements.
