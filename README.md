@@ -2,6 +2,8 @@
 
 An intelligent web application for NYUAD students to browse courses, generate conflict-free semester schedules, and get AI-powered recommendations for optimal course selection.
 
+Short Demo Link: https://drive.google.com/file/d/1ufVJaDh32309V6IMJzWti7RtJW1-7Tg1/view?usp=sharing
+
 ## 🚀 Features
 
 ### 📚 **Comprehensive Course Browser**
