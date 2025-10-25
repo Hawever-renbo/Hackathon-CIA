@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Schedule Synth - NYUAD Fall 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .course-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+            transition: all 0.2s;
+        }
+        .course-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .course-card.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .course-card h3 {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+        .course-card p {
+            font-size: 0.875rem;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background-color: #e0e7ff;
+            color: #312e81;
+            font-size: 0.75rem;
+            border-radius: 9999px;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .requirement-tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 9999px;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .requirement-core {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .requirement-major {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .requirement-elective {
+            background-color: #e0e7ff;
+            color: #312e81;
+        }
+        .requirement-ge {
+            background-color: #fce7f3;
+            color: #831843;
+        }
+        .llm-analysis {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .suggestion-card {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        .suggestion-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+        }
+        .schedule-day {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8fafc;
+        }
+        .schedule-item {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .conflict {
+            background-color: #fef2f2;
+            border-color: #fca5a5;
+        }
+        .filter-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Smart Schedule Synth</h1>
+            <p class="text-gray-600 mb-4">NYUAD Fall 2025 Course Browser & Schedule Generator</p>
+            
+            <!-- Search and Filters -->
+            <div class="filter-section">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Search Courses</label>
+                        <input type="text" id="search-input" placeholder="Search by title, course ID, or description..." 
+                               class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <select id="subject-filter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Subjects</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Credits</label>
+                        <select id="credits-filter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Credits</option>
+                            <option value="4">4 Credits</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-sm text-gray-600">Selected: </span>
+                        <span id="selected-count" class="font-medium text-blue-600">0</span>
+                        <span class="text-sm text-gray-600">courses</span>
+                    </div>
+                    <button id="generate-schedule" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        Generate Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Courses Section -->
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Available Courses</h2>
+                <div id="courses-container"></div>
+            </div>
+
+            <!-- Schedule Section -->
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Generated Schedule</h2>
+                <div id="schedule-container">
+                    <div class="text-center text-gray-500 py-8">
+                        <p>Select courses and click "Generate Schedule" to see your weekly schedule</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const coursesContainer = document.getElementById('courses-container');
+            const searchInput = document.getElementById('search-input');
+            const subjectFilter = document.getElementById('subject-filter');
+            const creditsFilter = document.getElementById('credits-filter');
+            const selectedCount = document.getElementById('selected-count');
+            const generateScheduleBtn = document.getElementById('generate-schedule');
+            const scheduleContainer = document.getElementById('schedule-container');
+            
+            let allCourses = [];
+            let selectedCourses = new Set();
+            let filteredCourses = [];
+
+            const fetchCourses = async () => {
+                try {
+                    const response = await fetch('/api/courses');
+                    allCourses = await response.json();
+                    filteredCourses = [...allCourses];
+                    renderCourses(filteredCourses);
+                    populateSubjectFilter();
+                } catch (error) {
+                    console.error('Error fetching courses:', error);
+                    coursesContainer.innerHTML = '<p class="text-red-500">Failed to load courses. Please try again later.</p>';
+                }
+            };
+
+            const populateSubjectFilter = () => {
+                const subjects = [...new Set(allCourses.map(course => course.subject))].sort();
+                subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject;
+                    option.textContent = subject;
+                    subjectFilter.appendChild(option);
+                });
+            };
+
+            const renderCourses = (courses) => {
+                coursesContainer.innerHTML = '';
+                if (courses.length === 0) {
+                    coursesContainer.innerHTML = '<p class="text-gray-600">No courses found matching your criteria.</p>';
+                    return;
+                }
+                
+                courses.forEach(course => {
+                    const courseCard = document.createElement('div');
+                    courseCard.className = `course-card ${selectedCourses.has(course.course_id) ? 'selected' : ''}`;
+                    courseCard.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3>${course.course_id}: ${course.title}</h3>
+                                <p class="text-sm text-gray-600 mb-2">${course.subject} • ${course.credits} credits</p>
+                                <p class="text-sm mb-2">${course.description}</p>
+                                <div class="mb-2">
+                                    <span class="text-xs text-gray-500">Instructors: </span>
+                                    <span class="text-xs">${course.instructors.join(', ')}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-xs text-gray-500">Requirements: </span>
+                                    <div class="mt-1">
+                                        ${course.requirements.map(req => {
+                                            let className = 'requirement-elective';
+                                            if (req === 'CORE') className = 'requirement-core';
+                                            else if (req === 'MAJOR_REQ') className = 'requirement-major';
+                                            else if (req === 'GE') className = 'requirement-ge';
+                                            return `<span class="requirement-tag ${className}">${req.replace('_', ' ')}</span>`;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    ${course.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                                </div>
+                            </div>
+                            <button class="ml-4 px-3 py-1 text-sm rounded ${selectedCourses.has(course.course_id) ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}" 
+                                    onclick="toggleCourse('${course.course_id}')">
+                                ${selectedCourses.has(course.course_id) ? 'Remove' : 'Add'}
+                            </button>
+                        </div>
+                    `;
+                    coursesContainer.appendChild(courseCard);
+                });
+            };
+
+            const filterCourses = () => {
+                const query = searchInput.value.toLowerCase();
+                const subject = subjectFilter.value;
+                const credits = creditsFilter.value;
+                
+                filteredCourses = allCourses.filter(course => {
+                    const matchesQuery = !query || 
+                        course.title.toLowerCase().includes(query) ||
+                        course.course_id.toLowerCase().includes(query) ||
+                        course.description.toLowerCase().includes(query) ||
+                        course.tags.some(tag => tag.toLowerCase().includes(query));
+                    
+                    const matchesSubject = !subject || course.subject === subject;
+                    const matchesCredits = !credits || course.credits.toString() === credits;
+                    
+                    return matchesQuery && matchesSubject && matchesCredits;
+                });
+                
+                renderCourses(filteredCourses);
+            };
+
+            const toggleCourse = (courseId) => {
+                if (selectedCourses.has(courseId)) {
+                    selectedCourses.delete(courseId);
+                } else {
+                    selectedCourses.add(courseId);
+                }
+                updateSelectedCount();
+                renderCourses(filteredCourses);
+            };
+
+            const updateSelectedCount = () => {
+                selectedCount.textContent = selectedCourses.size;
+                generateScheduleBtn.disabled = selectedCourses.size === 0;
+            };
+
+            const generateSchedule = async () => {
+                if (selectedCourses.size === 0) return;
+                
+                try {
+                    const response = await fetch('/api/schedule/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            courses: Array.from(selectedCourses)
+                        })
+                    });
+                    
+                    const scheduleData = await response.json();
+                    renderSchedule(scheduleData);
+                } catch (error) {
+                    console.error('Error generating schedule:', error);
+                    scheduleContainer.innerHTML = '<p class="text-red-500">Failed to generate schedule. Please try again.</p>';
+                }
+            };
+
+            const renderSchedule = (scheduleData) => {
+                const { schedule, conflicts, total_credits, llm_analysis } = scheduleData;
+                
+                let html = `
+                    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 class="font-semibold text-blue-900 mb-2">Schedule Summary</h3>
+                        <p class="text-sm text-blue-700">Total Credits: ${total_credits}</p>
+                        <p class="text-sm text-blue-700">Selected Courses: ${scheduleData.selected_courses.length}</p>
+                    </div>
+                `;
+                
+                // Add LLM Analysis
+                if (llm_analysis) {
+                    html += `
+                        <div class="llm-analysis">
+                            <h3 class="font-semibold text-blue-900 mb-2">🤖 Smart Analysis</h3>
+                            <p class="text-sm text-blue-800 mb-3">${llm_analysis.analysis}</p>
+                    `;
+                    
+                    if (llm_analysis.suggestions && llm_analysis.suggestions.length > 0) {
+                        html += `<div class="mt-3">`;
+                        llm_analysis.suggestions.forEach(suggestion => {
+                            html += `
+                                <div class="mb-4 p-3 bg-white border border-blue-200 rounded-lg">
+                                    <h4 class="font-medium text-gray-900 mb-2">Conflict: ${suggestion.conflict.course1} ↔ ${suggestion.conflict.course2}</h4>
+                                    <p class="text-sm text-gray-600 mb-2">${suggestion.conflict.day} at ${suggestion.conflict.time}</p>
+                                    <div class="text-sm font-medium text-gray-700 mb-2">Suggested Alternatives:</div>
+                                    <div class="space-y-2">
+                            `;
+                            
+                            suggestion.alternatives.forEach(alt => {
+                                html += `
+                                    <div class="suggestion-card">
+                                        <div class="font-medium text-sm">${alt.course_id}: ${alt.title}</div>
+                                        <div class="text-xs text-gray-600">${alt.subject} • ${alt.credits} credits</div>
+                                        <div class="text-xs text-gray-500 mt-1">${alt.description.substring(0, 100)}...</div>
+                                        <div class="mt-2">
+                                            ${alt.requirements.map(req => {
+                                                let className = 'requirement-elective';
+                                                if (req === 'CORE') className = 'requirement-core';
+                                                else if (req === 'MAJOR_REQ') className = 'requirement-major';
+                                                else if (req === 'GE') className = 'requirement-ge';
+                                                return `<span class="requirement-tag ${className}">${req.replace('_', ' ')}</span>`;
+                                            }).join('')}
+                                        </div>
+                                        <button class="mt-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200" 
+                                                onclick="addAlternativeCourse('${alt.course_id}')">
+                                            Add to Schedule
+                                        </button>
+                                    </div>
+                                `;
+                            });
+                            
+                            html += `</div></div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                }
+                
+                if (conflicts.length > 0) {
+                    html += `
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <h3 class="font-semibold text-red-900 mb-2">⚠️ Schedule Conflicts</h3>
+                            <ul class="text-sm text-red-700">
+                                ${conflicts.map(conflict => 
+                                    `<li>${conflict.course1} conflicts with ${conflict.course2} on ${conflict.day} at ${conflict.time}</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+                days.forEach(day => {
+                    const dayCourses = schedule[day];
+                    if (dayCourses.length > 0) {
+                        html += `
+                            <div class="schedule-day">
+                                <h3 class="font-semibold text-gray-900 mb-3">${day}</h3>
+                                ${dayCourses.map(course => `
+                                    <div class="schedule-item">
+                                        <div class="font-medium">${course.course_id}: ${course.title}</div>
+                                        <div class="text-sm text-gray-600">${course.start} - ${course.end}</div>
+                                        <div class="text-sm text-gray-600">${course.location}</div>
+                                        <div class="text-sm text-gray-600">Section ${course.section_id}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                });
+                
+                scheduleContainer.innerHTML = html;
+            };
+
+            // Event listeners
+            searchInput.addEventListener('input', filterCourses);
+            subjectFilter.addEventListener('change', filterCourses);
+            creditsFilter.addEventListener('change', filterCourses);
+            generateScheduleBtn.addEventListener('click', generateSchedule);
+
+            // Make functions globally available
+            window.toggleCourse = toggleCourse;
+            window.addAlternativeCourse = (courseId) => {
+                selectedCourses.add(courseId);
+                updateSelectedCount();
+                renderCourses(filteredCourses);
+                // Regenerate schedule with new course
+                generateSchedule();
+            };
+
+            fetchCourses();
+        });
+    </script>
+</body>
+</html>
